@@ -40,6 +40,7 @@ type NodeStatsNodeResponse struct {
 	HTTP             map[string]interface{}                     `json:"http"`
 	Transport        NodeStatsTransportResponse                 `json:"transport"`
 	Process          NodeStatsProcessResponse                   `json:"process"`
+	IndexingPressure NodeStatsIndexingPressureResponse          `json:"indexing_pressure"`
 }
 
 // NodeStatsBreakersResponse is a representation of a statistics about the field data circuit breaker
@@ -383,4 +384,27 @@ type ClusterHealthResponse struct {
 	Status                  string `json:"status"`
 	TimedOut                bool   `json:"timed_out"`
 	UnassignedShards        int64  `json:"unassigned_shards"`
+}
+
+// NodeStatsIndexingPressureResponse is a representation of a indexing pressure response (memory)
+type NodeStatsIndexingPressureResponse struct {
+	Memory NodeStatsIndexingPressureMemoryResponse `json:"memory"`
+}
+
+// NodeStatsIndexingPressureMemoryResponse defines node stats docs information structure for indices
+type NodeStatsIndexingPressureMemoryResponse struct {
+	Total        NodeStatsIndexingPressureMemoryTotalResponse `json:"total"`
+	LimitInBytes int64                                        `json:"limit_in_bytes"`
+}
+
+// NodeStatsIndexingPressureMemoryTotalResponse defines node stats docs information structure for indices
+type NodeStatsIndexingPressureMemoryTotalResponse struct {
+	CombinedCoordinatingAndPrimaryInBytes int64 `json:"combined_coordinating_and_primary_in_bytes"`
+	CoordinatingInBytes                   int64 `json:"coordinating_in_bytes"`
+	PrimaryInBytes                        int64 `json:"primary_in_bytes"`
+	ReplicaInBytes                        int64 `json:"replica_in_bytes"`
+	AllInBytes                            int64 `json:"all_in_bytes"`
+	CoordinatingRejections                int64 `json:"coordinating_rejections"`
+	PrimaryRejections                     int64 `json:"primary_rejections"`
+	ReplicaRejections                     int64 `json:"replica_rejections"`
 }
