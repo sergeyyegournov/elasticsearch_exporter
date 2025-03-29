@@ -53,13 +53,30 @@ type NodeStatsBreakersResponse struct {
 
 // NodeStatsIndexingPressureResponse is a representation of a elasticsearch indexing pressure
 type NodeStatsIndexingPressureResponse struct {
-	Current      NodeStatsIndexingPressureCurrentResponse `json:"current"`
-	LimitInBytes int64                                    `json:"limit_in_bytes"`
+	Current      NodeStatsIndexingPressureCurrentResponse     `json:"current"`
+	Total        NodeStatsIndexingPressureMemoryTotalResponse `json:"total"`
+	LimitInBytes int64                                        `json:"limit_in_bytes"`
 }
 
 // NodeStatsIndexingPressureMemoryCurrentResponse is a representation of a elasticsearch indexing pressure current memory usage
 type NodeStatsIndexingPressureCurrentResponse struct {
-	AllInBytes int64 `json:"all_in_bytes"`
+	CombinedCoordinatingAndPrimaryInBytes int64 `json:"combined_coordinating_and_primary_in_bytes"`
+	CoordinatingInBytes                   int64 `json:"coordinating_in_bytes"`
+	PrimaryInBytes                        int64 `json:"primary_in_bytes"`
+	ReplicaInBytes                        int64 `json:"replica_in_bytes"`
+	AllInBytes                            int64 `json:"all_in_bytes"`
+}
+
+// NodeStatsIndexingPressureMemoryTotalResponse is a representation of a elasticsearch indexing pressure current memory usage
+type NodeStatsIndexingPressureMemoryTotalResponse struct {
+	CombinedCoordinatingAndPrimaryInBytes int64 `json:"combined_coordinating_and_primary_in_bytes"`
+	CoordinatingInBytes                   int64 `json:"coordinating_in_bytes"`
+	PrimaryInBytes                        int64 `json:"primary_in_bytes"`
+	ReplicaInBytes                        int64 `json:"replica_in_bytes"`
+	AllInBytes                            int64 `json:"all_in_bytes"`
+	CoordinatingRejections                int64 `json:"coordinating_rejections"`
+	PrimaryRejections                     int64 `json:"primary_rejections"`
+	ReplicaRejections                     int64 `json:"replica_rejections"`
 }
 
 // NodeStatsJVMResponse is a representation of a JVM stats, memory pool information, garbage collection, buffer pools, number of loaded/unloaded classes

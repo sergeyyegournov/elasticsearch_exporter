@@ -1614,12 +1614,240 @@ func NewNodes(logger *slog.Logger, client *http.Client, url *url.URL, all bool, 
 			{
 				Type: prometheus.GaugeValue,
 				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "current_combined_coordinating_and_primary_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the coordinating or primary stage. This value is not the sum of coordinating and primary as a node can reuse the coordinating memory if the primary stage is executed locally.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Current.CombinedCoordinatingAndPrimaryInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.GaugeValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "current_coordinating_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the coordinating stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Current.CoordinatingInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.GaugeValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "current_primary_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the primary stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Current.PrimaryInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.GaugeValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "current_replica_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the replica stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Current.ReplicaInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.GaugeValue,
+				Desc: prometheus.NewDesc(
 					prometheus.BuildFQName(namespace, "indexing_pressure", "current_all_in_bytes"),
 					"Memory consumed, in bytes, by indexing requests in the coordinating, primary, or replica stage.",
 					defaultIndexingPressureLabels, nil,
 				),
 				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
 					return float64(indexingPressureMem.Current.AllInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_combined_coordinating_and_primary_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the coordinating or primary stage. This value is not the sum of coordinating and primary as a node can reuse the coordinating memory if the primary stage is executed locally.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.CombinedCoordinatingAndPrimaryInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_coordinating_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the coordinating stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.CoordinatingInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_primary_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the primary stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.PrimaryInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_replica_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the replica stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.ReplicaInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_all_in_bytes"),
+					"Memory consumed, in bytes, by indexing requests in the coordinating, primary, or replica stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.AllInBytes)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_coordinating_rejections"),
+					"Number of indexing requests rejected in the coordinating stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.CoordinatingRejections)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_primary_rejections"),
+					"Number of indexing requests rejected in the primary stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.PrimaryRejections)
+				},
+				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
+					return []string{
+						cluster,
+						node.Host,
+						node.Name,
+						indexingPressure,
+					}
+				},
+			},
+			{
+				Type: prometheus.CounterValue,
+				Desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, "indexing_pressure", "total_replica_rejections"),
+					"Number of indexing requests rejected in the replica stage.",
+					defaultIndexingPressureLabels, nil,
+				),
+				Value: func(indexingPressureMem NodeStatsIndexingPressureResponse) float64 {
+					return float64(indexingPressureMem.Total.ReplicaRejections)
 				},
 				Labels: func(cluster string, node NodeStatsNodeResponse, indexingPressure string) []string {
 					return []string{
