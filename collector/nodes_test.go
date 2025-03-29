@@ -1064,9 +1064,45 @@ func TestNodesStats(t *testing.T) {
              # HELP elasticsearch_filesystem_data_size_bytes Size of block device in bytes
              # TYPE elasticsearch_filesystem_data_size_bytes gauge
              elasticsearch_filesystem_data_size_bytes{cluster="elasticsearch",es_client_node="true",es_data_node="true",es_ingest_node="true",es_master_node="true",host="172.17.0.2",mount="/ (overlay)",name="aaf5a8a0bceb",path="/usr/share/elasticsearch/data/nodes/0"} 4.76630163456e+11
+             # HELP elasticsearch_indexing_pressure_current_combined_coordinating_and_primary_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating or primary stage. This value is not the sum of coordinating and primary as a node can reuse the coordinating memory if the primary stage is executed locally.
+             # TYPE elasticsearch_indexing_pressure_current_combined_coordinating_and_primary_in_bytes gauge
+             elasticsearch_indexing_pressure_current_combined_coordinating_and_primary_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_current_coordinating_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating stage.
+             # TYPE elasticsearch_indexing_pressure_current_coordinating_in_bytes gauge
+             elasticsearch_indexing_pressure_current_coordinating_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_current_primary_in_bytes Memory consumed, in bytes, by indexing requests in the primary stage.
+             # TYPE elasticsearch_indexing_pressure_current_primary_in_bytes gauge
+             elasticsearch_indexing_pressure_current_primary_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_current_replica_in_bytes Memory consumed, in bytes, by indexing requests in the replica stage.
+             # TYPE elasticsearch_indexing_pressure_current_replica_in_bytes gauge
+             elasticsearch_indexing_pressure_current_replica_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
              # HELP elasticsearch_indexing_pressure_current_all_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating, primary, or replica stage.
              # TYPE elasticsearch_indexing_pressure_current_all_in_bytes gauge
              elasticsearch_indexing_pressure_current_all_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_total_combined_coordinating_and_primary_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating or primary stage. This value is not the sum of coordinating and primary as a node can reuse the coordinating memory if the primary stage is executed locally.
+             # TYPE elasticsearch_indexing_pressure_total_combined_coordinating_and_primary_in_bytes counter
+             elasticsearch_indexing_pressure_total_combined_coordinating_and_primary_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 1423
+             # HELP elasticsearch_indexing_pressure_total_coordinating_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating stage.
+             # TYPE elasticsearch_indexing_pressure_total_coordinating_in_bytes counter
+             elasticsearch_indexing_pressure_total_coordinating_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 1423
+             # HELP elasticsearch_indexing_pressure_total_primary_in_bytes Memory consumed, in bytes, by indexing requests in the primary stage.
+             # TYPE elasticsearch_indexing_pressure_total_primary_in_bytes counter
+             elasticsearch_indexing_pressure_total_primary_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 1463
+             # HELP elasticsearch_indexing_pressure_total_replica_in_bytes Memory consumed, in bytes, by indexing requests in the replica stage.
+             # TYPE elasticsearch_indexing_pressure_total_replica_in_bytes counter
+             elasticsearch_indexing_pressure_total_replica_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_total_all_in_bytes Memory consumed, in bytes, by indexing requests in the coordinating, primary, or replica stage.
+             # TYPE elasticsearch_indexing_pressure_total_all_in_bytes counter
+             elasticsearch_indexing_pressure_total_all_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 1423
+             # HELP elasticsearch_indexing_pressure_total_coordinating_rejections Number of indexing requests rejected in the coordinating stage.
+             # TYPE elasticsearch_indexing_pressure_total_coordinating_rejections counter
+             elasticsearch_indexing_pressure_total_coordinating_rejections{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_total_primary_rejections Number of indexing requests rejected in the primary stage.
+             # TYPE elasticsearch_indexing_pressure_total_primary_rejections counter
+             elasticsearch_indexing_pressure_total_primary_rejections{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
+             # HELP elasticsearch_indexing_pressure_total_replica_rejections Number of indexing requests rejected in the replica stage.
+             # TYPE elasticsearch_indexing_pressure_total_replica_rejections counter
+             elasticsearch_indexing_pressure_total_replica_rejections{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 0
              # HELP elasticsearch_indexing_pressure_limit_in_bytes Configured memory limit, in bytes, for the indexing requests
              # TYPE elasticsearch_indexing_pressure_limit_in_bytes gauge
              elasticsearch_indexing_pressure_limit_in_bytes{cluster="elasticsearch",host="172.17.0.2",indexing_pressure="memory",name="aaf5a8a0bceb"} 7.8852915e+07
