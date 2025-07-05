@@ -14,6 +14,7 @@
 package collector
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,13 +27,22 @@ import (
 	"strings"
 	"testing"
 
-	"bytes"
-
 	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/promslog"
 )
+
+// Strongly typed struct for fixture decoding
+// Matches assignment_status.json fields
+// Add 'State' for node_shards_total logic
+
+type ShardFixture struct {
+	Index string `json:"index"`
+	Shard string `json:"shard"`
+	Node  string `json:"node"`
+	State string `json:"state"`
+}
 
 func TestShards(t *testing.T) {
 	// Testcases created using:
@@ -42,12 +52,24 @@ func TestShards(t *testing.T) {
 	// curl http://localhost:9200/_cat/shards?format=json > fixtures/shards/$VERSION.json
 
 	tests := []struct {
-		name string
-		file string
+		name       string
+		file       string
+		staticWant string // for static output cases
 	}{
 		{
 			name: "7.15.0",
 			file: "7.15.0.json",
+			staticWant: `# TYPE elasticsearch_index_shard_assignment gauge
+elasticsearch_index_shard_assignment{assigned="true",index=".geoip_databases",shard="0"} 1
+elasticsearch_index_shard_assignment{assigned="true",index="otherindex",shard="0"} 1
+elasticsearch_index_shard_assignment{assigned="false",index="otherindex",shard="0"} 0
+elasticsearch_index_shard_assignment{assigned="true",index="testindex",shard="0"} 1
+elasticsearch_index_shard_assignment{assigned="false",index="testindex",shard="0"} 0
+# TYPE elasticsearch_node_shards_total gauge
+elasticsearch_node_shards_total{cluster="unknown_cluster",node="35dfca79831a"} 3
+# TYPE elasticsearch_node_shards_json_parse_failures counter
+elasticsearch_node_shards_json_parse_failures 0
+`,
 		},
 		{
 			name: "assignment_status",
@@ -63,49 +85,49 @@ func TestShards(t *testing.T) {
 			}
 			defer f.Close()
 
-			// Read fixture data for DRY expected output
-			var fixtureData []map[string]interface{}
-			if err := json.NewDecoder(bytes.NewReader(readAll(f))).Decode(&fixtureData); err != nil {
-				t.Fatal(err)
-			}
-
 			var wantBuf bytes.Buffer
-			wantBuf.WriteString(`# TYPE elasticsearch_index_shard_assignment gauge
-`)
-			for _, shard := range fixtureData {
-				index := shard["index"].(string)
-				shardNum := shard["shard"].(string)
-				node, _ := shard["node"].(string)
-				assigned := "false"
-				if node != "" && node != "null" {
-					assigned = "true"
+			switch tt.name {
+			case "assignment_status":
+				var fixtureData []ShardFixture
+				dec := json.NewDecoder(f)
+				if err := dec.Decode(&fixtureData); err != nil {
+					t.Fatalf("failed to decode fixture: %v", err)
 				}
-				// Match encoder's label order: assigned, index, shard
-				wantBuf.WriteString(
-					fmt.Sprintf("elasticsearch_index_shard_assignment{assigned=\"%s\",index=\"%s\",shard=\"%s\"} %d\n",
-						assigned, index, shardNum, map[bool]int{true: 1, false: 0}[assigned == "true"],
-					),
-				)
-			}
-			wantBuf.WriteString(`# TYPE elasticsearch_node_shards_total gauge
+				wantBuf.WriteString(`# TYPE elasticsearch_index_shard_assignment gauge
 `)
-			// For node_shards_total, only count STARTED shards and group by node
-			nodeShards := make(map[string]int)
-			for _, shard := range fixtureData {
-				if state, ok := shard["state"].(string); ok && state == "STARTED" {
-					node := shard["node"].(string)
-					nodeShards[node]++
+				for _, shard := range fixtureData {
+					assigned := "false"
+					if shard.Node != "" && shard.Node != "null" {
+						assigned = "true"
+					}
+					wantBuf.WriteString(
+						fmt.Sprintf("elasticsearch_index_shard_assignment{assigned=\"%s\",index=\"%s\",shard=\"%s\"} %d\n",
+							assigned, shard.Index, shard.Shard, map[bool]int{true: 1, false: 0}[assigned == "true"],
+						),
+					)
 				}
-			}
-			for node, count := range nodeShards {
-				wantBuf.WriteString(
-					fmt.Sprintf("elasticsearch_node_shards_total{cluster=\"unknown_cluster\",node=\"%s\"} %d\n", node, count),
-				)
-			}
-			wantBuf.WriteString(`# TYPE elasticsearch_node_shards_json_parse_failures counter
+				wantBuf.WriteString(`# TYPE elasticsearch_node_shards_total gauge
 `)
-			wantBuf.WriteString(`elasticsearch_node_shards_json_parse_failures 0
+				nodeShards := make(map[string]int)
+				for _, shard := range fixtureData {
+					if shard.State == "STARTED" {
+						nodeShards[shard.Node]++
+					}
+				}
+				for node, count := range nodeShards {
+					wantBuf.WriteString(
+						fmt.Sprintf("elasticsearch_node_shards_total{cluster=\"unknown_cluster\",node=\"%s\"} %d\n", node, count),
+					)
+				}
+				wantBuf.WriteString(`# TYPE elasticsearch_node_shards_json_parse_failures counter
 `)
+				wantBuf.WriteString(`elasticsearch_node_shards_json_parse_failures 0
+`)
+			case "7.15.0":
+				wantBuf.WriteString(tt.staticWant)
+			default:
+				t.Logf("Skipping dynamic builder for test case: %s", tt.name)
+			}
 
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				f.Seek(0, 0)
@@ -123,21 +145,17 @@ func TestShards(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// Collect metrics directly and encode to text format
 			ch := make(chan prometheus.Metric)
 			var actualBuf bytes.Buffer
 			go func() {
 				s.Collect(ch)
 				close(ch)
 			}()
-			// Collect all metrics into a slice
 			var metrics []prometheus.Metric
 			for m := range ch {
 				metrics = append(metrics, m)
 			}
-			// Group metrics by desc to form MetricFamily
 			families := make(map[string]*io_prometheus_client.MetricFamily)
-			// Helper to assign correct metric type
 			metricType := func(name string) io_prometheus_client.MetricType {
 				switch name {
 				case "elasticsearch_index_shard_assignment":

@@ -26,6 +26,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	labelIndex    = "index"
+	labelShard    = "shard"
+	labelAssigned = "assigned"
+)
+
 // ShardResponse has shard's node and index info
 type ShardResponse struct {
 	Index string `json:"index"`
@@ -149,16 +155,14 @@ func (s *Shards) Describe(ch chan<- *prometheus.Desc) {
 func (s *Shards) getAndParseURL(u *url.URL) ([]ShardResponse, error) {
 	res, err := s.client.Get(u.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get from %s://%s:%s%s: %s",
+		return nil, fmt.Errorf("failed to get from %s://%s:%s%s: %w",
 			u.Scheme, u.Hostname(), u.Port(), u.Path, err)
 	}
-
 	defer func() {
-		err = res.Body.Close()
-		if err != nil {
+		if cerr := res.Body.Close(); cerr != nil {
 			s.logger.Warn(
 				"failed to close http.Client",
-				"err", err,
+				"err", cerr,
 			)
 		}
 	}()
@@ -175,22 +179,16 @@ func (s *Shards) getAndParseURL(u *url.URL) ([]ShardResponse, error) {
 }
 
 func (s *Shards) fetchAndDecodeShards() ([]ShardResponse, error) {
-
 	u := *s.url
 	u.Path = path.Join(u.Path, "/_cat/shards")
 	q := u.Query()
 	q.Set("format", "json")
 	u.RawQuery = q.Encode()
-	sfr, err := s.getAndParseURL(&u)
-	if err != nil {
-		return sfr, err
-	}
-	return sfr, err
+	return s.getAndParseURL(&u)
 }
 
-// Collect number of shards on each node
+// Collect emits the number of shards on each node and per-shard assignment status
 func (s *Shards) Collect(ch chan<- prometheus.Metric) {
-
 	defer func() {
 		ch <- s.jsonParseFailures
 	}()
@@ -205,34 +203,27 @@ func (s *Shards) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	nodeShards := make(map[string]float64)
-	// Track emitted {index, shard, assigned} to avoid duplicates
 	emitted := make(map[string]struct{})
 
 	for _, shard := range sr {
 		if shard.State == "STARTED" {
 			nodeShards[shard.Node]++
 		}
-		// Emit per-index, per-shard assignment status
-		assigned := "false"
-		if shard.Node != "" {
-			assigned = "true"
-		}
-		key := shard.Index + "|" + shard.Shard + "|" + assigned
+		assigned := shard.Node != ""
+		key := fmt.Sprintf("%s|%s|%t", shard.Index, shard.Shard, assigned)
 		if _, exists := emitted[key]; exists {
 			continue
 		}
 		emitted[key] = struct{}{}
+		assignedStr := "false"
+		if assigned {
+			assignedStr = "true"
+		}
 		ch <- prometheus.MustNewConstMetric(
 			indexShardAssignment,
 			prometheus.GaugeValue,
-			func() float64 {
-				if assigned == "true" {
-					return 1
-				} else {
-					return 0
-				}
-			}(),
-			shard.Index, shard.Shard, assigned,
+			boolToFloat64(assigned),
+			shard.Index, shard.Shard, assignedStr,
 		)
 	}
 
@@ -246,4 +237,12 @@ func (s *Shards) Collect(ch chan<- prometheus.Metric) {
 			)
 		}
 	}
+}
+
+// boolToFloat64 returns 1.0 if true, 0.0 if false
+func boolToFloat64(b bool) float64 {
+	if b {
+		return 1.0
+	}
+	return 0.0
 }
