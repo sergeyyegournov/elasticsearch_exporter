@@ -75,7 +75,7 @@ var (
 	indexShardAssignment = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "index_shard", "assignment"),
 		"Assignment status of each shard per index (1 = assigned, 0 = unassigned)",
-		[]string{"index", "shard", "assigned"}, nil,
+		[]string{labelIndex, labelShard, labelAssigned}, nil,
 	)
 )
 
