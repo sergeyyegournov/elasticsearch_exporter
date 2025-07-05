@@ -199,12 +199,6 @@ elasticsearch_node_shards_json_parse_failures 0
 	}
 }
 
-// Helper to read all from file
-func readAll(f *os.File) []byte {
-	b, _ := io.ReadAll(f)
-	return b
-}
-
 // Helper to compare sorted lines
 func compareSortedLines(a, b string) bool {
 	aLines := filterNonEmpty(strings.Split(a, "\n"))
