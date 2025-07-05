@@ -1,0 +1,14 @@
+[
+  {
+    "index": "testindex",
+    "shard": "0",
+    "state": "STARTED",
+    "node": "node-1"
+  },
+  {
+    "index": "testindex",
+    "shard": "1",
+    "state": "UNASSIGNED",
+    "node": ""
+  }
+] 

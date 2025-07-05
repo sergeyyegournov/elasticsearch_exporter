@@ -64,6 +64,15 @@ type nodeShardMetric struct {
 	Labels labels
 }
 
+// Add new metric descriptor for per-index, per-shard assignment status
+var (
+	indexShardAssignment = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "index_shard", "assignment"),
+		"Assignment status of each shard per index (1 = assigned, 0 = unassigned)",
+		[]string{"index", "shard", "assigned"}, nil,
+	)
+)
+
 // NewShards defines Shards Prometheus metrics
 func NewShards(logger *slog.Logger, client *http.Client, url *url.URL) *Shards {
 
@@ -133,6 +142,8 @@ func (s *Shards) Describe(ch chan<- *prometheus.Desc) {
 	for _, metric := range s.nodeShardMetrics {
 		ch <- metric.Desc
 	}
+	// Add new metric to Describe
+	ch <- indexShardAssignment
 }
 
 func (s *Shards) getAndParseURL(u *url.URL) ([]ShardResponse, error) {
@@ -194,11 +205,35 @@ func (s *Shards) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	nodeShards := make(map[string]float64)
+	// Track emitted {index, shard, assigned} to avoid duplicates
+	emitted := make(map[string]struct{})
 
 	for _, shard := range sr {
 		if shard.State == "STARTED" {
 			nodeShards[shard.Node]++
 		}
+		// Emit per-index, per-shard assignment status
+		assigned := "false"
+		if shard.Node != "" {
+			assigned = "true"
+		}
+		key := shard.Index + "|" + shard.Shard + "|" + assigned
+		if _, exists := emitted[key]; exists {
+			continue
+		}
+		emitted[key] = struct{}{}
+		ch <- prometheus.MustNewConstMetric(
+			indexShardAssignment,
+			prometheus.GaugeValue,
+			func() float64 {
+				if assigned == "true" {
+					return 1
+				} else {
+					return 0
+				}
+			}(),
+			shard.Index, shard.Shard, assigned,
+		)
 	}
 
 	for node, shards := range nodeShards {
